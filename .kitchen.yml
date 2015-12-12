@@ -1,0 +1,64 @@
+#
+# NOTE: this runs the omnibus cookbook, but does not actually run Omnibus. Use
+# 'kichen converge' to setup the virtual machine and then `kitchen login` to
+# SSH into the machine and run Omnibus.
+#
+
+driver:
+  name: kitchen-scaleway
+
+provisioner:
+  name: chef_zero
+  require_chef_omnibus: true # Always install the latest version of Chef
+  chef_omnibus_url: http://chef-arm.herokuapp.com/install.sh
+
+transport:
+  name: rsync
+
+platforms:
+  - name: fedora-22
+    run_list: yum-epel::default
+  - name: debian-wheezy
+    run_list: apt::default
+  - name: debian-sid
+    run_list: apt::default
+  - name: ubuntu-12.04
+    run_list: apt::default
+  - name: ubuntu-14.04
+    run_list: apt::default
+
+suites:
+  - name: angrychef
+    attributes:
+      omnibus:
+        install_dir: /opt/angrychef
+    run_list:
+      - omnibus-chef-arm::default
+      - omnibus-chef-arm::build_angrychef
+  - name: chef
+    provisioner:
+      chef_omnibus_install_options: -P angrychef
+      chef_omnibus_root: /opt/angrychef
+    attributes:
+      omnibus:
+        install_dir: /opt/chef
+    run_list:
+      - omnibus-chef-arm::default
+      - omnibus::default
+      - omnibus-chef-arm::build_chef
+  - name: chefdk
+    attributes:
+      omnibus:
+        install_dir: /opt/chefdk
+    run_list:
+      - omnibus-chef-arm::default
+      - omnibus::default
+      - omnibus-chef-arm::build_chefdk
+  - name: push-jobs-client
+    attributes:
+      omnibus:
+        install_dir: /opt/push-jobs-client
+    run_list:
+      - omnibus-chef-arm::default
+      - omnibus::default
+      - omnibus-chef-arm::build_push-jobs-client
